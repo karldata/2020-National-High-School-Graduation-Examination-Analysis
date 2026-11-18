@@ -64,6 +64,35 @@ These are **reported exploratory observations**, not independently validated res
 
 A verified dependency list, supported Python version, and end-to-end run instructions have **not yet been documented**. This README does not claim that a fresh environment can reproduce the notebook without adjustments.
 
+## Data-quality audit
+
+A reproducible, aggregate-only audit of the prepared CSV is provided in [`scripts/data_quality_audit.py`](scripts/data_quality_audit.py).
+
+```bash
+python scripts/data_quality_audit.py
+```
+
+This creates `reports/data_quality.md` and `reports/data_quality.json` locally with row count, missing values, automatically detected candidate-ID duplicates, and checks for score sentinel `-1`, non-numeric values, and invalid scores. **Review detected column names**, because detection is based on header patterns. No student-level data is included in the reports.
+
+The [Data quality audit workflow](.github/workflows/data-quality-audit.yml) runs the same script on GitHub Actions; download the `data-quality-report` artifact from its workflow run to inspect verified totals. These aggregate reports are **not yet a reconciliation** to the original scraping attempts or the official candidate population; source logs and coverage documentation are still needed.
+
+### Extended diagnostics
+
+The [extended audit](scripts/extended_data_audit.py) supplements the baseline audit and is included in GitHub Actions:
+
+- Calendar validation of the DOB day/month/year fields, with age review flags referenced to December 31, 2020.
+- Natural Sciences and Social Sciences subject participation counts, including partial sets, without assuming the group fields represent a particular coding scheme.
+- Score distributions by subject, excluding -1 as a not-taken sentinel, with counts, mean, median, percentiles, and frequency bands.
+- Optional arithmetic reconciliation of original collection counts when independently documented logs exist.
+
+Run locally using:
+
+    python scripts/extended_data_audit.py
+
+It creates reports/extended_quality.md and reports/extended_quality.json. Both are included in the data-quality-report artifact alongside the original audit. A report generated from clean_data.csv cannot prove completeness relative to all original source candidates.
+
+If original scraping logs provide documented counts, supply a local JSON file with nonnegative integer keys attempted, succeeded, failed, excluded and invoke --manifest PATH. The script checks attempted = succeeded + failed, and succeeded - excluded = CSV records; matching counts still do not establish national coverage.
+
 ## Limitations and next steps
 
 - Record the source coverage, collection date, and number of attempted/retrieved/removed/final observations.
